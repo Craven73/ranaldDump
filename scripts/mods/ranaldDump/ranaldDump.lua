@@ -1,5 +1,6 @@
 local mod = get_mod("ranaldDump")
-
+-- require 'pl'
+local pl = require'pl.pretty'
 local locale_code = Application.user_setting("language_id")
 local out_dir = "C:\\Users\\craven\\dev\\dump\\"
 
@@ -96,6 +97,56 @@ end)
 -- [description] = victor_placeholder (string)
 -- </talent>
 
+mod:command("career", " Career info", function() 
+  mod:dump(ItemMasterList, "career", 5)
+end)
+
+mod:command("heros", " Dump Hero Info", function() 
+  
+  for name, settings in pairs(CareerSettings) do 
+    if name ~= "empire_soldier_tutorial" then 
+      local career = {}
+      career["id"] = 1
+      career["name"] = Localize(settings.profile_name)
+      career["codeName"] = name
+      career["health"] = settings.attributes.max_hp
+      career["passive"] = {
+        name = Localize(settings.passive_ability.display_name),
+        description = Localize(settings.passive_ability.description)
+      }
+      mod:echo("%s",cjson.encode(career))
+      mod:dump(settings.passive_ability.perks, "perks",5)
+    end 
+    
+    
+    
+    -- mod:echo(name)
+    -- mod:echo(Localize(settings.profile_name))
+    -- mod:echo(settings.display_name)
+    -- mod:echo(settings.description)
+    -- mod:echo(settings.attributes)
+    -- mod:echo(settings.activated_ability)
+    -- mod:echo(settings.passive_ability)
+    
+  end 
+end)
+
+
+-- 2 activated abilities ?? but same
+-- [activated_ability] = table
+--     [1] = table
+--       [ability_class] = table
+--       [icon] = kerillian_shade_activated_ability (string)
+--       [cooldown] = 60 (number)
+--       [display_name] = career_active_name_we_1 (string)
+--       [description] = career_active_desc_we_1_2 (string)
+--     [2] = table
+--       [ability_class] = table
+--       [icon] = kerillian_shade_activated_ability (string)
+--       [cooldown] = 60 (number)
+--       [display_name] = career_active_name_we_1 (string)
+--       [description] = career_active_desc_we_1_2 (string)
+
 
 
 
@@ -129,4 +180,4 @@ mod:command("ranald", " Dump ranald info", function ()
   --     mod:echo(settings.ingame_display_name)
   --   end
   -- end
-end)
+end) 
