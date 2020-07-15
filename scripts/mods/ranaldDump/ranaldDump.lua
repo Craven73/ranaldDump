@@ -114,8 +114,12 @@ mod:command("heros", " Dump Hero Info", function()
         name = Localize(settings.passive_ability.display_name),
         description = Localize(settings.passive_ability.description)
       }
+      career["skill"] = {
+        name = Localize(settings.activated_ability[1].display_name),
+        description = Localize(settings.activated_ability[1].description)
+      }
       mod:echo("%s",cjson.encode(career))
-      mod:dump(settings.passive_ability.perks, "perks",5)
+      mod:dump(settings.passive_ability.perks, "perks",5) 
     end 
     
     
