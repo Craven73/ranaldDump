@@ -116,24 +116,43 @@ mod:command("heros", " Dump Hero Info", function()
       }
       career["skill"] = {
         name = Localize(settings.activated_ability[1].display_name),
-        description = Localize(settings.activated_ability[1].description)
+        description = Localize(settings.activated_ability[1].description),
+        cooldown = settings.activated_ability[1].cooldown
       }
+      perks = {} 
+      local numPerks = #settings.passive_ability.perks
+      for i = 1, numPerks, 1 do
+        perks[i] = {
+          name = Localize(settings.passive_ability.perks[i].display_name),
+          description = Localize(settings.passive_ability.perks[i].description)
+        }
+      end
+
+      career["perks"] = perks
       mod:echo("%s",cjson.encode(career))
       mod:dump(settings.passive_ability.perks, "perks",5) 
-    end 
-    
-    
-    
-    -- mod:echo(name)
-    -- mod:echo(Localize(settings.profile_name))
-    -- mod:echo(settings.display_name)
-    -- mod:echo(settings.description)
-    -- mod:echo(settings.attributes)
-    -- mod:echo(settings.activated_ability)
-    -- mod:echo(settings.passive_ability)
+    end
     
   end 
 end)
+
+-- <perks>
+-- [1] = table
+--   [description] = career_passive_desc_bw_3b (string)
+--   [display_name] = career_passive_name_bw_3b (string)
+-- [2] = table
+--   [description] = career_passive_desc_bw_3c_2 (string)
+--   [display_name] = career_passive_name_bw_3c (string)
+-- </perks>
+-- [MOD][ranaldDump][ECHO] {"codeName":"wh_zealot","id":1,"health":150,"skill":{"cooldown":"<60>","name":"Holy Fervour","description":"Victor charges forward and gains 25% increased attack speed for 5 seconds."},"name":"Witch Hunter","passive":{"name":"Fiery Faith","description":"Power increases by 5% for every 25 health missing."}}
+-- <perks>
+-- [1] = table
+--   [description] = career_passive_desc_wh_1b (string)
+--   [display_name] = career_passive_name_wh_1b (string)
+-- [2] = table
+--   [description] = career_passive_desc_wh_1c (string)
+--   [display_name] = career_passive_name_wh_1c (string)
+-- </perks>
 
 
 -- 2 activated abilities ?? but same
