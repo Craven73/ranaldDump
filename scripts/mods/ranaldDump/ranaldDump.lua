@@ -1,19 +1,68 @@
 local mod = get_mod("ranaldDump")
--- require 'pl'
-local pl = require'pl.pretty'
+
 local locale_code = Application.user_setting("language_id")
 local out_dir = "C:\\Users\\craven\\dev\\dump\\"
 
+local heroOrder = {
+  [1] = "es_mercenary",
+  [2] = "es_huntsman",
+  [3] = "es_knight",
+  [4] = "es_questingknight",
+  [5] = "dr_ranger",
+  [6] = "dr_ironbreaker",
+  [7] = "dr_slayer",
+  [8] = "dr_holder",
+  [9] = "we_waywatcher",
+  [10] = "we_maidenguard",
+  [11] = "we_shade",
+  [12] = "we_holder",
+  [13] = "wh_captain",
+  [14] = "wh_bountyhunter",
+  [15] = "wh_zealot",
+  [16] = "wh_holder",
+  [17] = "bw_adept",
+  [18] = "bw_scholar",
+  [19] = "bw_unchained",
+  [20] = "bw_holder" 
+}
+local heroId = {
+  ["es_mercenary"] = 1,
+  ["es_huntsman"] = 2,
+  ["es_knight"] = 3,
+  ["es_questingknight"] = 16,
+  ["dr_ranger"] = 4,
+  ["dr_ironbreaker"] = 5,
+  ["dr_slayer"] = 6,
+  ["dr_holder"] = 17,
+  ["we_waywatcher"] = 7,
+  ["we_maidenguard"] = 8,
+  ["we_shade"] = 9,
+  ["we_holder"] = 18,
+  ["wh_captain"] = 10,
+  ["wh_bountyhunter"] = 11,
+  ["wh_zealot"] = 12,
+  ["wh_holder"] = 19,
+  ["bw_adept"] = 13,
+  ["bw_scholar"] = 14,
+  ["bw_unchained"] = 15,
+  ["bw_holder"] = 20
+}
 
 
 local function tableContains(table, key) 
   return table[key] ~= nil
 end 
 
+-- Apparently # accomplishes this
+local function tableSize(table)
+  local count = 0
+  for _ in pairs(table) do count = count + 1 end
+  return count
+end
+
 local function getTalentDescription()
   talents = {}
   for key, value in pairs(Talents) do 
-    mod:echo(key)
     for _, talent in pairs(value) do 
       local nameStatus, nameResponse = pcall(Localize, talent["name"])
       if nameStatus then
@@ -28,109 +77,16 @@ local function getTalentDescription()
   return talents
 end
 
--- Apparently # accomplishes this
-local function tableSize(table)
-  local count = 0
-  for _ in pairs(table) do count = count + 1 end
-  return count
-end
-
--- Not needed using Fatshark function
--- local function getTalentDescription(description, values) 
---   local fmt_localized = Localize(description)
-  
---   if not values then
---     return fmt_localized
---   end
-  
---   local VALUE_LIST = {}
---   local n = #values
---   for i = 1, n, 1 do
--- 		local value_data = values[i]
--- 		local value_type = value_data.value_type
--- 		local value_fmt = value_data.value_fmt
--- 		local value = value_data.value
-
--- 		if value_type == "percent" then
--- 			value = math.abs(100 * value)
--- 		elseif value_type == "baked_percent" then
--- 			value = math.abs(100 * (value - 1))
--- 		end
-
--- 		if value_fmt then
--- 			value = string.format(value_fmt, value)
--- 		end
-
--- 		VALUE_LIST[i] = value
---   end
-  
---   return string.format(fmt_localized, unpack(VALUE_LIST, 1, n))
--- end
-
-
-mod:command("talents", " Talent info", function() 
-  mod:dump(SPProfiles[1], "spprof",1)
-  local talent_interface = Managers.backend:get_interface("talents")
-  local current_talents = talent_interface:get_talents("es_mercenary")
-  -- mod:dump(CareerSettings["wh_zealot"], "talents", 1)
-  mod:dump(Talents["witch_hunter"], "talents", 3)
-  -- local test = string.format(Localize(Talents["witch_hunter"][1]["description"]), 3)
-  -- mod:echo(test)
-  talents = {}
-  for key, value in pairs(Talents) do 
-    mod:echo(key)
-    for _, talent in pairs(value) do 
-      local nameStatus, nameResponse = pcall(Localize, talent["name"])
-      if nameStatus then
-        talents[talent["name"]] = {
-          description = UIUtils.format_localized_description(talent["description"], talent["description_values"])
-        }
-        -- mod:echo(nameResponse)
-        -- mod:echo("%s", getTalentDescription(talent["description"], talent["description_values"]))
-        -- mod:echo("%s", UIUtils.format_localized_description(talent["description"], talent["description_values"]))
-      end
-      
-    end
-  end
-  mod:echo("%s",cjson.encode(talents))
-end)
-
--- <talent>
--- [icon] = victor_witchhunter_power_level_unbalance (string)
--- [buffer] = server (string)
--- [description_values] = table
---   [1] = table
---     [value_type] = percent (string)
---     [value] = 0.074999999999999997 (number)
--- [buffs] = table
---   [1] = power_level_unbalance (string)
--- [row] = 3 (number)
--- [coulumn] = 3 (number)
--- [buff_data] = table
--- [num_ranks] = 1 (number)
--- [tree] = 3 (number)
--- [requirements] = table
--- [name] = victor_witchhunter_power_level_unbalance (string)
--- [description] = power_level_unbalance_desc (string)
--- </talent>
--- [MOD][ranaldDump][ECHO] <victor_placeholder>
--- <talent>
--- [name] = victor_placeholder (string)
--- [description] = victor_placeholder (string)
--- </talent>
-
-mod:command("career", " Career info", function() 
-  mod:dump(ItemMasterList, "career", 5)
-end)
-
-mod:command("heros", " Dump Hero Info", function() 
+mod:command("heroes", " Dump Hero Info", function() 
 
   talentDescriptions = getTalentDescription()
+
+  local heroInfo = {}
   
   for name, settings in pairs(CareerSettings) do 
-    if name ~= "empire_soldier_tutorial" then 
+    if heroId[name] ~= nil then 
       local career = {}
-      career["id"] = 1
+      career["id"] = heroId[name]
       career["name"] = Localize(name)
       career["codeName"] = name
       career["health"] = settings.attributes.max_hp
@@ -161,87 +117,30 @@ mod:command("heros", " Dump Hero Info", function()
         for _,talent in pairs(talents) do 
           allTalents[count] = {
             name = Localize(talent),
-            description = talentDescriptions[talent]
+            description = talentDescriptions[talent]["description"]
           }
           count = count + 1
         end
       end
 
       career["talents"] = allTalents
-
-      mod:echo("%s",cjson.encode(career))
-      mod:dump(TalentTrees[settings.profile_name][settings.talent_tree_index], "talents",3)
-      -- mod:dump(settings.passive_ability.perks, "perks",5) 
+      heroInfo[name] = career
+      -- mod:echo("%s",cjson.encode(career))
     end
     
   end 
+
+  mod:echo("%s", cjson.encode(heroInfo))
+  local file = io.open(string.format("%s%s", out_dir, "heros.js"),"w+")
+  file:write("[")
+  local numHeroes = #heroOrder
+  for i = 1, numHeroes, 1 do
+    file:write(cjson.encode(heroInfo[heroOrder[i]]))
+    file:write(",")
+  end
+  file:write("]")
+  
+  file:close() 
 end)
 
--- <perks>
--- [1] = table
---   [description] = career_passive_desc_bw_3b (string)
---   [display_name] = career_passive_name_bw_3b (string)
--- [2] = table
---   [description] = career_passive_desc_bw_3c_2 (string)
---   [display_name] = career_passive_name_bw_3c (string)
--- </perks>
--- [MOD][ranaldDump][ECHO] {"codeName":"wh_zealot","id":1,"health":150,"skill":{"cooldown":"<60>","name":"Holy Fervour","description":"Victor charges forward and gains 25% increased attack speed for 5 seconds."},"name":"Witch Hunter","passive":{"name":"Fiery Faith","description":"Power increases by 5% for every 25 health missing."}}
--- <perks>
--- [1] = table
---   [description] = career_passive_desc_wh_1b (string)
---   [display_name] = career_passive_name_wh_1b (string)
--- [2] = table
---   [description] = career_passive_desc_wh_1c (string)
---   [display_name] = career_passive_name_wh_1c (string)
--- </perks>
 
-
--- 2 activated abilities ?? but same
--- [activated_ability] = table
---     [1] = table
---       [ability_class] = table
---       [icon] = kerillian_shade_activated_ability (string)
---       [cooldown] = 60 (number)
---       [display_name] = career_active_name_we_1 (string)
---       [description] = career_active_desc_we_1_2 (string)
---     [2] = table
---       [ability_class] = table
---       [icon] = kerillian_shade_activated_ability (string)
---       [cooldown] = 60 (number)
---       [display_name] = career_active_name_we_1 (string)
---       [description] = career_active_desc_we_1_2 (string)
-
-
-
-
-mod:command("ranald", " Dump ranald info", function () 
-  -- mod:dump(CareerSettings, "Career", 1)
-  -- mod:dump(TalentTrees, "Talents", 3)
-  mod:dump(Talents, "talents", 5)
-  mod:echo(cjson.encode(Talents))
-
-  local file = io.open(string.format("%s%s", out_dir, filename),"w+")
-  file:write(cjson.encode(Talents))
-  file:close() 
-  -- local characters = {}
-  -- for _, profile_index in ipairs(ProfilePriority) do
-  --   local profile = SPProfiles[profile_index]
-  --   characters[profile.display_name] = {
-  --     character_name = profile.character_name,
-  --     ingame_display_name = profile.ingame_display_name,
-  --     ingame_short_display_name = profile.ingame_short_display_name
-  --   }
-  --   mod:echo(cjson.encode(profile.character_name))
-  --   mod:echo(profile.ingame_display_name)
-  --   mod:echo(profile.ingame_short_display_name)
-  -- end
-  
-  mod:dump(characters, "table", 5)
-  -- for name, settings in pairs(CareerSettings) do
-  --   if (name ~= "empire_soldier_tutorial") then
-  --     mod:echo("Generating strings for: %s", name)
-  --     mod:echo(settings.display_name)
-  --     mod:echo(settings.ingame_display_name)
-  --   end
-  -- end
-end) 
