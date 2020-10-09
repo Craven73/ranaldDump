@@ -1,7 +1,7 @@
 local mod = get_mod("ranaldDump")
 
 local locale_code = Application.user_setting("language_id")
-local out_dir = "C:\\Users\\craven\\dev\\dump\\"
+local out_dir = "C:\\Users\\Craven\\Dev\\Dump\\"
 
 local heroOrder = {
   [1] = "es_mercenary",
@@ -77,7 +77,76 @@ local function getTalentDescription()
   return talents
 end
 
-mod:command("heroes", " Dump Hero Info", function() 
+local function writePerks(file, depth, perks) 
+  file:write(string.format("%s\"perks\": [\n", depth))
+  for perk in pairs(perks) do
+    file:write(string.format("%s\t{\n", depth)) 
+    file:write(string.format("%s\t\t\"name\": \"%s\",\n", depth, perks[perk]["name"])) 
+    file:write(string.format("%s\t\t\"description\": \"%s\"\n", depth, perks[perk]["description"])) 
+    file:write(string.format("%s\t}", depth)) 
+    if perk ~= #perks then
+      file:write(",")
+    end
+    file:write("\n")
+  end
+  file:write(string.format("%s],\n", depth))
+end
+
+local function writeTalents(file, depth, talents)
+  file:write(string.format("%s\"talents\": [\n", depth))
+  for talent in pairs(talents) do 
+    file:write(string.format("%s\t{\n", depth))
+    file:write(string.format("%s\t\t\"name\": \"%s\",\n", depth, talents[talent]["name"]))
+    file:write(string.format("%s\t\t\"description\": \"%s\"\n", depth, string.gsub(talents[talent]["description"], "[\r\n]", "")))
+    file:write(string.format("%s\t}", depth))
+    if talent ~= #talents then
+      file:write(",")
+    end
+    file:write("\n")
+  end
+  file:write(string.format("%s]\n", depth))
+end
+
+local function writeHero(file, id, heroData)
+  local depth = "\t\t"
+  file:write("\t{\n")
+  
+  -- Missing hero
+  if heroData == nil then
+    file:write(string.format("%s\"id\": %d\n", depth, id))
+    file:write("\t}")
+    return
+  end
+
+  -- TODO: fix heroName
+  file:write(string.format("%s\"id\": %d,\n", depth, heroData["id"]))
+  file:write(string.format("%s\"name\": \"%s\",\n", depth, heroData["name"]))
+  file:write(string.format("%s\"codeName\": \"%s\",\n", depth, heroData["codeName"]))
+  file:write(string.format("%s\"heroName\": \"%s\",\n", depth, heroData["name"]))
+  file:write(string.format("%s\"health\": %d,\n", depth, heroData["health"]))
+  -- passive
+  file:write(string.format("%s\"passive\": {\n", depth))
+  file:write(string.format("%s\t\"name\": \"%s\",\n", depth, heroData["passive"]["name"]))
+  file:write(string.format("%s\t\"description\": \"%s\"\n", depth, heroData["passive"]["description"]))
+  file:write(string.format("%s},\n", depth))
+  -- skill
+  file:write(string.format("%s\"skill\": {\n", depth))
+  file:write(string.format("%s\t\"name\": \"%s\",\n", depth, heroData["skill"]["name"]))
+  file:write(string.format("%s\t\"description\": \"%s\",\n", depth, heroData["skill"]["description"]))
+  file:write(string.format("%s\t\"cooldown\": \"%s\"\n", depth, heroData["skill"]["cooldown"]))
+  file:write(string.format("%s},\n", depth))
+  -- perks
+  writePerks(file, depth, heroData["perks"])
+  -- talents
+  writeTalents(file, depth, heroData["talents"])
+
+  file:write("\t}")
+end
+
+mod:command("heroes", " Dump Hero Info", function(filePath) 
+  if filePath then
+    out_dir = filePath
+  end
 
   talentDescriptions = getTalentDescription()
 
@@ -125,22 +194,23 @@ mod:command("heroes", " Dump Hero Info", function()
 
       career["talents"] = allTalents
       heroInfo[name] = career
-      -- mod:echo("%s",cjson.encode(career))
     end
     
   end 
 
-  mod:echo("%s", cjson.encode(heroInfo))
-  local file = io.open(string.format("%s%s", out_dir, "heros.js"),"w+")
-  file:write("[")
+  local file = io.open(string.format("%s%s", out_dir, "Heroes.js"),"w+")
+  file:write("export const heroesData = [\n")
   local numHeroes = #heroOrder
   for i = 1, numHeroes, 1 do
-    file:write(cjson.encode(heroInfo[heroOrder[i]]))
-    file:write(",")
+    writeHero(file, heroId[heroOrder[i]], heroInfo[heroOrder[i]])
+    if i ~= numHeroes then
+      file:write(",\n")
+    end
   end
-  file:write("]")
-  
+
+  file:write("\n]")
   file:close() 
 end)
+
 
 
